@@ -29,7 +29,9 @@
         <a name="{{ full_name }}"></a>
         <div class="repoinfo enabled list-group-item clearfix" data-name="{{ full_name }}">
             <div class="col-lg-5">
-                <h3 style="margin-top:0;">{{ full_name }}</h3>
+                <a href="{{html_url}}">
+                    <h3 style="margin-top:0;">{{ full_name }}</h3>
+                </a>
                 {{ description }}
             </div>
             <div class="col-lg-5">
