@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub roulette</title>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/x-hogan" id="userinfo-template">
+        <div class="col-lg-4">
+            <div class="panel panel-info userinfo"  data-ulogin="{{ login }}">
+                <img src="{{avatar_url}}" />
+                <div class="details">
+                    {{#name}}
+                    <strong>{{ name }}</strong><br />
+                    {{/name}}
+                    {{ login }}<br />
+                    {{#location}}
+                        <i class="icon-location-arrow"></i> {{ location }}<br />
+                    {{/location}}
+                    {{#public_repos}}
+                        <i class="icon-book"></i> {{ public_repos }}
+                    {{/public_repos}}
+                </div>
+            </div>
+        </div>
+    </script>
+    <script type="text/x-hogan" id="repoinfo-template">
+        <a name="{{ full_name }}"></a>
+        <div class="repoinfo enabled list-group-item clearfix" data-name="{{ full_name }}">
+            <div class="col-lg-5">
+                <h3 style="margin-top:0;">{{ full_name }}</h3>
+                {{ description }}
+            </div>
+            <div class="col-lg-5">
+                <i class="icon-exclamation-sign"> Open issues: </i> {{ open_issues }}<br />
+                <i class="icon-calendar"> Last update: </i> {{ updated_at }}
+            </div>
+        </div>
+    </script>
+</head>
+<body>
+    <br />
+    <div class="container">
+        <div class="input-group col-lg-4">
+            <span class="input-group-addon">Your Username:</span>
+            <input type="text" id="username-input" class="form-control col-lg-3">
+        </div>
+    </div>
+    <div class="container" id="userinfo">
+    </div>
+    <div class="container">
+        <div class="list-group col-lg-10" id="repo-list">
+        </div>
+        <div class="col-lg-2">
+            <button class="btn btn-primary btn-start">start</button>
+        </div>
+    </div>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.7.2/mustache.min.js"></script>
+    <script src="js/github.js"></script>
+    <script>
+
+        var tplUserInfo = document.getElementById('userinfo-template').innerText;
+        var tplRepoInfo = document.getElementById('repoinfo-template').innerText;
+        var ghBaseUrl = 'https://api.github.com';
+        var unInput = document.getElementById('username-input');
+        var uiContainer = document.getElementById('userinfo');
+        var repoList = document.getElementById('repo-list');
+        var unTimeout;
+        function updateUser()
+        {
+            var username = unInput.value;
+            uiContainer.innerHTML = '';
+            github.user(username)
+                    .getInfo(displayUserInfo)
+                    .getOrgs(getOrgsInfo)
+        }
+
+        function getOrgsInfo(orgs)
+        {
+            for(var i=0;i<orgs.length;i++) {
+                github.user(orgs[i].login).getInfo(displayUserInfo)
+            }
+        }
+
+        var repoCache = {}
+        var repoDebounce;
+        function updateUserRepos(repos)
+        {
+            repoCache[this.name] = repos;
+            if(repoDebounce) {
+                clearTimeout(repoDebounce);
+            }
+            repoDebounce = setTimeout(updateRepoDisplay, 250);
+        }
+
+        function updateRepoDisplay()
+        {
+            var active = uiContainer.querySelectorAll('.userinfo.panel-info');
+            repoList.innerHTML = '';
+            for(var i = 0;i<active.length;i++) {
+                var login = active[i].dataset['ulogin'];
+                var repos = repoCache[login];
+                if(!repos) { continue; }
+
+                for(var x=0;x<repos.length;x++) {
+                    repoList.innerHTML += Mustache.render(tplRepoInfo, repos[x])
+                }
+            }
+        }
+
+        function updateRepos()
+        {
+            var active = uiContainer.querySelectorAll('.userinfo.panel-info');
+            for(var i=0;i<active.length;i++) {
+                var login = active[i].dataset['ulogin'];
+                var user  = github.user(login)
+                user.getRepos(updateUserRepos.bind(user))
+                if(repoDebounce) {
+                    clearTimeout(repoDebounce);
+                    repoDebounce = false;
+                }
+            }
+        }
+
+        function displayUserInfo(userdata)
+        {
+            uiContainer.innerHTML += Mustache.render(tplUserInfo, userdata)
+            updateRepos();
+        }
+
+        unInput.addEventListener('keyup', function(evt){
+            if(unTimeout) {
+                clearTimeout(unTimeout);
+            }
+            unTimeout = setTimeout(updateUser, 500);
+        })
+
+        $('#userinfo').on('click', '.userinfo', function() {
+            $(this).toggleClass('panel-info');
+            updateRepos();
+        })
+        $(document.body).on('click', '.btn-start', function() {
+            var list = $('#repo-list .repoinfo.enabled');
+            var winnerId = parseInt(Math.random() * list.length);
+            list.removeClass('active');
+            $(list[winnerId]).addClass('active');
+            window.location.hash = $(list[winnerId]).data('name')
+        })
+    </script>
+</body>
+</html>

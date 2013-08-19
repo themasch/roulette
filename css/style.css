@@ -1,0 +1,18 @@
+.userinfo {
+    margin-top: 10px;
+}
+.userinfo img {
+    width: 90px;
+    height: 90px;
+    border: none;
+    display:block;
+    float:left;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.userinfo .details {
+    padding: 5px 10px;
+    margin-left: 90px;
+    height: 90px;
+}
