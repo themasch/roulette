@@ -28,15 +28,18 @@
     <script type="text/x-hogan" id="repoinfo-template">
         <a name="{{ full_name }}"></a>
         <div class="repoinfo enabled list-group-item clearfix" data-name="{{ full_name }}">
-            <div class="col-lg-5">
+            <div class="col-lg-7">
                 <a href="{{html_url}}">
                     <h3 style="margin-top:0;">{{ full_name }}</h3>
                 </a>
                 {{ description }}
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-4">
                 <i class="icon-exclamation-sign"> Open issues: </i> {{ open_issues }}<br />
                 <i class="icon-calendar"> Last update: </i> {{ updated_at }}
+            </div>
+            <div class="col-lg-1">
+                <h3><i class="icon-unchecked"></i></h3>
             </div>
         </div>
     </script>
@@ -144,10 +147,13 @@
             $(this).toggleClass('panel-info');
             updateRepos();
         })
+        $('#repo-list').on('click', '.repoinfo', function() {
+            $(this).toggleClass('enabled');
+        })
         $(document.body).on('click', '.btn-start', function() {
+            $('#repo-list .repoinfo').removeClass('active');
             var list = $('#repo-list .repoinfo.enabled');
             var winnerId = parseInt(Math.random() * list.length);
-            list.removeClass('active');
             $(list[winnerId]).addClass('active');
             window.location.hash = $(list[winnerId]).data('name')
         })

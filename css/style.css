@@ -16,3 +16,7 @@
     margin-left: 90px;
     height: 90px;
 }
+
+.repoinfo.enabled i.icon-unchecked:before {
+    content: "\f046";
+}
